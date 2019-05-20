@@ -57,15 +57,17 @@ def getOneCategory(cat):
                                 database=Database['database']
         )
         cursor = cnx.cursor()
-
-        args = [cat]
-        cursor.callproc('getCategoryTitle', args)
+        cursor.callproc('getCategories')
+        
+        # args = [cat]
+        # cursor.callproc('getCategoryTitle', args)
         for result in cursor.stored_results():
             data = (result.fetchall())  # data is a list of tuples [('BLW',"Baby lead weaning"), ('SMOOTHIE',"Smoothies")]
 
         retVal = []
         for d in data:  #d is a tuple - example: ('SMOOTHIE',"Smoothies")
-            retVal +=[{'category':d[0], 'title' : d[1]}]
+            if (d[0] == cat ):
+                retVal +=[{'category':d[0], 'title' : d[1]}]
 
         resp = jsonify(retVal)
         resp.status_code = 200
@@ -87,7 +89,19 @@ def getRecipesList(category):
                                 database=Database['database']
         )
         cursor = cnx.cursor()
+        
+        #Check user category parameter is valid:
+        cursor.callproc('getCategories')
+        for result in cursor.stored_results():
+            data = (result.fetchall())
+        isCatValid = False
+        for d in data:
+            if (d[0] == category ): 
+                isCatValid = True
+                break
+        if not (isCatValid): return jsonify([])
 
+        #cat parameter is valid, continue.
         args = [category]
         cursor.callproc('getRecipesTitle', args)
         for result in cursor.stored_results():
@@ -111,7 +125,7 @@ def getRecipesList(category):
     
 
 
-@app.route("/recipe-details/<id>")
+@app.route("/recipe-details/<int:id>")
 def getRecipeDetails(id):
     try:
         cnx = mysql.connector.connect(user= Database['user'],
@@ -147,8 +161,6 @@ def getRecipeDetails(id):
     finally:
         cursor.close()
         cnx.close()
-
-
 
 
 @app.errorhandler(404)
