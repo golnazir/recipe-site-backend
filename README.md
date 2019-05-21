@@ -1,4 +1,4 @@
-# Backend Flask API for recipe site. 
+# Backend Flask API for recipe book web application. 
 
 This repository is a Flask REST API that retrives data from MySQL database using the MySQL.Connector driver. It's purpose is to supply content for [recipe-site-frontend](https://github.com/golnazir/recipe-site-frontend).
 Currently it implements four api endpoints that return data in JSON format. These are:
