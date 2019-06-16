@@ -8,7 +8,7 @@ from flask import Flask
 
 from Database import DatabaseConfig as Database
 
-from IPython import embed
+# from IPython import embed
 
 app = Flask(__name__)
 
@@ -77,53 +77,134 @@ def getOneCategory(cat):
         cursor.close()
         cnx.close()
 
+@app.route('/category/add', methods=['POST'])
+def addCategory():
+    try:
+        content = request.get_json()
+        name = content['name']
+        title = content['title']
+       
+        cnx = mysql.connector.connect(user= Database['user'],
+                                password=Database['password'],
+                                host= Database['host'],
+                                database=Database['database']
+            )
+        cursor = cnx.cursor()
+        # validate the received values
+        if (name and title and request.method == 'POST' ):
+            # save edits
+            args = [name, title]
+            cursor.callproc('addCategory', args)
+            cnx.commit()
+            resp = jsonify('Successfully added one category!')
+            resp.status_code = 200
+            return resp
+        else:
+            return not_found()
 
+    except Error as e:
+        print("ERROR: " , e)
+    finally:
+        cursor.close()
+        cnx.close()
 
-# TO DO
-# @app.route('/category/update', methods=['POST'])
-# def updateCategory():
-
-# TO DO
-# @app.route('/category/add', methods=['POST'])
-# def addCategory():
-
-
-# TO DO
-# @app.route('/category/delete/<category>')
-# def deleteCategory(category):
-#         try:
-#         cnx = mysql.connector.connect(user= Database['user'],
-#                                 password=Database['password'],
-#                                 host= Database['host'],
-#                                 database=Database['database']
-#         )
-#         cursor = cnx.cursor()
+@app.route('/category/update', methods=['POST'])
+def updateCategory():
+    try:
+        content = request.get_json()
+        oldName = content['oldName']
+        newName = content['newName']
         
-#         #Check user category parameter is valid:
-#         cursor.callproc('getCategories')
-#         for result in cursor.stored_results():
-#             data = (result.fetchall())
-#         isCatValid = False
-#         for d in data:
-#             if (d[0] == category ): 
-#                 isCatValid = True
-#                 break
-#         if not (isCatValid): return jsonify("Cannot find the category to delete it!")
+        cnx = mysql.connector.connect(user= Database['user'],
+                                password=Database['password'],
+                                host= Database['host'],
+                                database=Database['database']
+            )
+        cursor = cnx.cursor()
+        # validate the received values
+        if (oldName and newName and request.method == 'POST' ):
+            # save edits
+            args = [oldName , newName]
+            cursor.callproc('updateCategory', args)
+            cnx.commit()
+            resp = jsonify('Successfully updated the category name!')
+            resp.status_code = 200
+            return resp
+        else:
+            return not_found()
 
-#         #cat parameter is valid, continue.
-#         args = [category]
+    except Error as e:
+        print("ERROR: " , e)
         
+    finally:
+        cursor.close()
+        cnx.close()
 
-#         resp = jsonify("Successfuly delete the category and all the recipes under the category.")
-#         resp.status_code = 200
-#         return resp
+@app.route('/category-title/update', methods=['POST'])
+def updateCategoryTitle():
+    try:
+        content = request.get_json()
+        name = content['name']
+        title = content['title']
+        
+        cnx = mysql.connector.connect(user= Database['user'],
+                                password=Database['password'],
+                                host= Database['host'],
+                                database=Database['database']
+            )
+        cursor = cnx.cursor()
+        # validate the received values
+        if (name and title and request.method == 'POST' ):
+            # save edits
+            args = [name , title]
+            cursor.callproc('updateCategoryTitle', args)
+            cnx.commit()
+            resp = jsonify('Successfully updated the category title!')
+            resp.status_code = 200
+            return resp
+        else:
+            return not_found()
 
-#     except Error as e:
-#         print("ERROR: ", e)
+    except Error as e:
+        print("ERROR: " , e)
+        
+    finally:
+        cursor.close()
+        cnx.close()
 
-#     finally:
-#         cursor.close()
-#         cnx.close()
+@app.route('/category/delete/<category>')
+def deleteCategory(category):
+    try:
+        cnx = mysql.connector.connect(user= Database['user'],
+                                password=Database['password'],
+                                host= Database['host'],
+                                database=Database['database']
+        )
+        cursor = cnx.cursor()
+        
+        #Check user category parameter is valid:
+        cursor.callproc('getCategories')
+        for result in cursor.stored_results():
+            data = (result.fetchall())
+        isCatValid = False
+        for d in data:
+            if (d[0] == category ): 
+                isCatValid = True
+                break
+        if not (isCatValid): return jsonify("Cannot find the category to delete it!")
+
+        #cat parameter is valid, continue.
+        args = [category]
+        cursor.callproc('deleteCategory', args)
+        cnx.commit()
+        resp = jsonify("Successfuly delete the category and all the recipes under the category.")
+        resp.status_code = 200
+        return resp
+    except Error as e:
+        print("ERROR: ", e)
+    finally:
+        cursor.close()
+        cnx.close()
 
 
 
@@ -210,48 +291,6 @@ def getRecipeDetails(id):
         cursor.close()
         cnx.close()
 
-@app.route('/recipe/update', methods=['POST'])
-def updateRecipe():
-    try:
-        content = request.get_json()
-        _id = content['id']
-        _category = content['category']
-        _title = content['title']
-        _ingredients = content['ingredients']
-        _instructions = content['instructions']
-        
-        # _id = int (request.args.get('id'))
-        # _category = request.args.get('category')
-        # _title = request.args.get ('title')
-        # _ingredients = request.args.get('ingredients')
-        # _instructions = request.args.get('instructions')
-        
-        cnx = mysql.connector.connect(user= Database['user'],
-                                password=Database['password'],
-                                host= Database['host'],
-                                database=Database['database']
-            )
-        cursor = cnx.cursor()
-        # validate the received values
-        # print ("**********", _id, _category, _title, _ingredients, _instructions)
-        if (_id and _category and _title and _ingredients and _ingredients and request.method == 'POST' ):
-            # save edits
-            args = [_id, _category, _title, _ingredients, _instructions]
-            cursor.callproc('UpdateRecipeDetails', args)
-            cnx.commit()
-            resp = jsonify('Successfully updated the recipe!')
-            resp.status_code = 200
-            return resp
-        else:
-            return not_found()
-
-    except Error as e:
-        print("ERROR: " , e)
-        
-    finally:
-        cursor.close()
-        cnx.close()
-
 @app.route('/recipe-details/add', methods=['POST'])
 def addRecipe():
     try:
@@ -282,6 +321,48 @@ def addRecipe():
 
     except Error as e:
         print("ERROR: " , e)
+    finally:
+        cursor.close()
+        cnx.close()
+
+@app.route('/recipe/update', methods=['POST'])
+def updateRecipe():
+    try:
+        content = request.get_json()
+        _id = content['id']
+        _category = content['category']
+        _title = content['title']
+        _ingredients = content['ingredients']
+        _instructions = content['instructions']
+        
+        # _id = int (request.args.get('id'))
+        # _category = request.args.get('category')
+        # _title = request.args.get ('title')
+        # _ingredients = request.args.get('ingredients')
+        # _instructions = request.args.get('instructions')
+        
+        cnx = mysql.connector.connect(user= Database['user'],
+                                password=Database['password'],
+                                host= Database['host'],
+                                database=Database['database']
+            )
+        cursor = cnx.cursor()
+        # validate the received values
+        # print ("**********", _id, _category, _title, _ingredients, _instructions)
+        if (_id and _category and _title and _ingredients and _ingredients and request.method == 'POST' ):
+            # save edits
+            args = [_id, _category, _title, _ingredients, _instructions]
+            cursor.callproc('updateRecipeDetails', args)
+            cnx.commit()
+            resp = jsonify('Successfully updated the recipe!')
+            resp.status_code = 200
+            return resp
+        else:
+            return not_found()
+
+    except Error as e:
+        print("ERROR: " , e)
+        
     finally:
         cursor.close()
         cnx.close()
